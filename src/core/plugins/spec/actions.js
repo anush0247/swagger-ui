@@ -171,6 +171,19 @@ export const setResponse = ( path, method, res ) => {
 }
 
 export const setRequest = ( path, method, req ) => {
+  console.log('setRequest', req)
+  // try{
+  //   if (req.body) {
+  //     let data = {
+  //       "clientKeyDetailsId": 1,
+  //       "data": JSON.stringify(JSON.parse(req.body))
+  //     }
+  //     req.body = JSON.stringify(data)
+  //   }
+  // }
+  // catch(err) {
+  //   console.log(err)
+  // }
   return {
     payload: { path, method, req },
     type: SET_REQUEST
@@ -204,7 +217,6 @@ export const executeRequest = (req) => ({fn, specActions, specSelectors}) => {
 
   let parsedRequest = Object.assign({}, req)
   parsedRequest = fn.buildRequest(parsedRequest)
-
   specActions.setRequest(req.pathName, req.method, parsedRequest)
 
   // track duration of request
@@ -227,7 +239,27 @@ export const execute = ( { path, method, ...extras }={} ) => (system) => {
   let { requestContentType, responseContentType } = specSelectors.contentTypeValues([path, method]).toJS()
   let isXml = /xml/i.test(requestContentType)
   let parameters = specSelectors.parameterValues([path, method], isXml).toJS()
-
+  let params = spec.paths[path][method].parameters
+  let bodyParam = null
+  params.map((item) => {
+    if( item.in === 'body' ){
+      bodyParam = item.name
+    }
+  })
+  if(bodyParam){
+    try{
+      if (parameters[bodyParam]) {
+        let data = {
+          "clientKeyDetailsId": 1,
+          "data": JSON.stringify(JSON.stringify(JSON.parse(parameters[bodyParam])))
+        }
+        parameters[bodyParam] = JSON.stringify(data)
+      }
+    }
+    catch(err) {
+      console.log(err)
+    }
+  }
   return specActions.executeRequest({fetch, spec, pathName: path, method, parameters, requestContentType, scheme, responseContentType, ...extras })
 }
 
