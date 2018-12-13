@@ -20,10 +20,10 @@ export default function curl( request ){
   if ( request.get("body") ){
 
     if(type === "multipart/form-data" && request.get("method") === "POST") {
-      for( let [ k,v ] of request.get("body").values()) {
+      for( let [ k,v ] of request.get("body").entrySeq()) {
         curlified.push( "-F" )
         if (v instanceof win.File) {
-          curlified.push( `"${k}=@${v.name};type=${v.type}"` )
+          curlified.push( `"${k}=@${v.name}${v.type ? `;type=${v.type}` : ""}"` )
         } else {
           curlified.push( `"${k}=${v}"` )
         }

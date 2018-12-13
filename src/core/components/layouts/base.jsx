@@ -6,63 +6,79 @@ export default class BaseLayout extends React.Component {
   static propTypes = {
     errSelectors: PropTypes.object.isRequired,
     errActions: PropTypes.object.isRequired,
-    specActions: PropTypes.object.isRequired,
     specSelectors: PropTypes.object.isRequired,
-    layoutSelectors: PropTypes.object.isRequired,
-    layoutActions: PropTypes.object.isRequired,
+    oas3Selectors: PropTypes.object.isRequired,
+    oas3Actions: PropTypes.object.isRequired,
     getComponent: PropTypes.func.isRequired
   }
 
   render() {
-    let { specSelectors, specActions, getComponent } = this.props
+    let {specSelectors, getComponent} = this.props
 
-    let info = specSelectors.info()
-    let url = specSelectors.url()
-    let basePath = specSelectors.basePath()
-    let host = specSelectors.host()
-    let securityDefinitions = specSelectors.securityDefinitions()
-    let externalDocs = specSelectors.externalDocs()
-    let schemes = specSelectors.schemes()
-
-    let Info = getComponent("info")
+    let SvgAssets = getComponent("SvgAssets")
+    let InfoContainer = getComponent("InfoContainer", true)
+    let VersionPragmaFilter = getComponent("VersionPragmaFilter")
     let Operations = getComponent("operations", true)
-    let Models = getComponent("models", true)
-    let AuthorizeBtn = getComponent("authorizeBtn", true)
+    let Models = getComponent("Models", true)
     let Row = getComponent("Row")
     let Col = getComponent("Col")
     let Errors = getComponent("errors", true)
-    const Schemes = getComponent("schemes")
+
+    const ServersContainer = getComponent("ServersContainer", true)
+    const SchemesContainer = getComponent("SchemesContainer", true)
+    const AuthorizeBtnContainer = getComponent("AuthorizeBtnContainer", true)
+    const FilterContainer = getComponent("FilterContainer", true)
+    let isSwagger2 = specSelectors.isSwagger2()
+    let isOAS3 = specSelectors.isOAS3()
 
     const isSpecEmpty = !specSelectors.specStr()
 
     if(isSpecEmpty) {
-      return <h4>No spec provided.</h4>
+      let loadingMessage
+      let isLoading = specSelectors.loadingStatus() === "loading"
+      if(isLoading) {
+        loadingMessage = <div className="loading"></div>
+      } else {
+        loadingMessage = <h4>No API definition provided.</h4>
+      }
+
+      return <div className="swagger-ui">
+        <div className="loading-container">
+          {loadingMessage}
+        </div>
+      </div>
     }
+
+    const servers = specSelectors.servers()
+    const schemes = specSelectors.schemes()
+
+    const hasServers = servers && servers.size
+    const hasSchemes = schemes && schemes.size
+    const hasSecurityDefinitions = !!specSelectors.securityDefinitions()
 
     return (
 
       <div className='swagger-ui'>
-          <div>
+          <SvgAssets />
+          <VersionPragmaFilter isSwagger2={isSwagger2} isOAS3={isOAS3} alsoShow={<Errors/>}>
             <Errors/>
             <Row className="information-container">
               <Col mobile={12}>
-                { info.count() ? (
-                  <Info info={ info } url={ url } host={ host } basePath={ basePath } externalDocs={externalDocs} getComponent={getComponent}/>
-                ) : null }
+                <InfoContainer/>
               </Col>
             </Row>
-            { schemes && schemes.size || securityDefinitions ? (
+
+            {hasServers || hasSchemes || hasSecurityDefinitions ? (
               <div className="scheme-container">
                 <Col className="schemes wrapper" mobile={12}>
-                  { schemes && schemes.size ? (
-                    <Schemes schemes={ schemes } specActions={ specActions } />
-                  ) : null }
-                  { securityDefinitions ? (
-                    <AuthorizeBtn />
-                  ) : null }
+                  {hasServers ? (<ServersContainer />) : null}
+                  {hasSchemes ? (<SchemesContainer />) : null}
+                  {hasSecurityDefinitions ? (<AuthorizeBtnContainer />) : null}
                 </Col>
               </div>
-            ) : null }
+            ) : null}
+
+            <FilterContainer/>
 
             <Row>
               <Col mobile={12} desktop={12} >
@@ -74,7 +90,7 @@ export default class BaseLayout extends React.Component {
                 <Models/>
               </Col>
             </Row>
-          </div>
+          </VersionPragmaFilter>
         </div>
       )
   }
