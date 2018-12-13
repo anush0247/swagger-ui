@@ -438,27 +438,27 @@ export const execute = ( { path, method, ...extras }={} ) => (system) => {
   let { requestContentType, responseContentType } = specSelectors.contentTypeValues([path, method]).toJS()
   let isXml = /xml/i.test(requestContentType)
   let parameters = specSelectors.parameterValues([path, method], isXml).toJS()
-//  let params = spec.paths[path][method].parameters
-//  let bodyParam = null
-//  params.map((item) => {
-//    if( item.in === 'body' ){
-//      bodyParam = item.name
-//    }
-//  })
-//  if(bodyParam){
-//    try{
-//      if (parameters[bodyParam]) {
-//        let data = {
-//          "clientKeyDetailsId": 1,
-//          "data": JSON.stringify(JSON.stringify(JSON.parse(parameters[bodyParam])))
-//        }
-//        parameters[bodyParam] = JSON.stringify(data)
-//      }
-//    }
-//    catch(err) {
-//      console.log(err)
-//    }
-//  }
+  let params = spec.paths[path][method].parameters
+  let bodyParam = null
+  params.map((item) => {
+    if( item.in === 'body' ){
+      bodyParam = "body." + item.name
+    }
+  })
+  if(bodyParam){
+    try{
+      if (parameters[bodyParam]) {
+        let data = {
+          "clientKeyDetailsId": 1,
+          "data": JSON.stringify(JSON.stringify(JSON.parse(parameters[bodyParam])))
+        }
+        parameters[bodyParam] = JSON.stringify(data)
+      }
+    }
+    catch(err) {
+      console.log(err)
+    }
+  }
 
   return specActions.executeRequest({
     ...extras,
